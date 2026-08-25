@@ -1,0 +1,15 @@
+{
+  "short_name": "AquaHarvest",
+  "name": "AquaHarvest AI — Rainwater Harvesting App",
+  "icons": [
+    {
+      "src": "./assets/ai-master.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "./index.html",
+  "background_color": "#070d19",
+  "theme_color": "#06b6d4",
+  "display": "standalone"
+}

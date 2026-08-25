@@ -1,0 +1,1730 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="farmer-light">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AquaHarvest — Advanced Rooftop Rainwater Harvesting & Artificial Recharge Studio</title>
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./src/index.css" />
+  <link rel="stylesheet" href="./src/app.css" />
+
+  <!-- React 18 & Babel Standalone UMD Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react/18.3.1/umd/react.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.3.1/umd/react-dom.production.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.24.0/babel.min.js"></script>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState, useEffect, useMemo, useRef, createContext, useContext } = React;
+
+    // ==========================================
+    // SVG ICONS LIBRARY
+    // ==========================================
+    const createSvgIcon = (pathElements, viewBox = "0 0 24 24") => {
+      return ({ size = 20, color = "currentColor", className = "", style = {} }) => (
+        <svg width={size} height={size} viewBox={viewBox} fill="none" stroke={color} strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" className={className} style={{ display: 'inline-block', verticalAlign: 'middle', flexShrink: 0, ...style }}>
+          {pathElements}
+        </svg>
+      );
+    };
+
+    const Droplets = createSvgIcon(<><path d="M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.84-2.29 3.76S3 11.09 3 12.25c0 2.22 1.8 4.05 4 4.05z" /><path d="M12.56 6.6A10.97 10.97 0 0 0 14 3.02c.5 1.5 1.5 2.7 2.5 3.5 1.5 1.2 2.5 2.7 2.5 4.48 0 2.76-2.24 5-5 5s-5-2.24-5-5c0-1.28.48-2.43 1.34-3.32" /></>);
+    const Calculator = createSvgIcon(<><rect x="4" y="2" width="16" height="20" rx="2" /><line x1="8" y1="6" x2="16" y2="6" /><line x1="16" y1="14" x2="16" y2="14" /><line x1="12" y1="14" x2="12" y2="14" /><line x1="8" y1="14" x2="8" y2="14" /><line x1="16" y1="18" x2="16" y2="18" /><line x1="12" y1="18" x2="12" y2="18" /><line x1="8" y1="18" x2="8" y2="18" /><line x1="16" y1="10" x2="16" y2="10" /><line x1="12" y1="10" x2="12" y2="10" /><line x1="8" y1="10" x2="8" y2="10" /></>);
+    const Wrench = createSvgIcon(<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />);
+    const Bot = createSvgIcon(<><rect x="3" y="11" width="18" height="10" rx="2" /><circle cx="12" cy="5" r="2" /><path d="M12 7v4" /><line x1="8" y1="15" x2="8" y2="15" /><line x1="16" y1="15" x2="16" y2="15" /></>);
+    const Sparkles = createSvgIcon(<path d="m12 3-1.9 5.8a2 2 0 0 1-1.3 1.3L3 12l5.8 1.9a2 2 0 0 1 1.3 1.3L12 21l1.9-5.8a2 2 0 0 1 1.3-1.3L21 12l-5.8-1.9a2 2 0 0 1-1.3-1.3Z" />);
+    const Send = createSvgIcon(<><line x1="22" y1="2" x2="11" y2="13" /><polygon points="22 2 15 22 11 13 2 9 22 2" /></>);
+    const Sun = createSvgIcon(<><circle cx="12" cy="12" r="5" /><line x1="12" y1="1" x2="12" y2="3" /><line x1="12" y1="21" x2="12" y2="23" /><line x1="4.22" y1="4.22" x2="5.64" y2="5.64" /><line x1="18.36" y1="18.36" x2="19.78" y2="19.78" /><line x1="1" y1="12" x2="3" y2="12" /><line x1="21" y1="12" x2="23" y2="12" /></>);
+    const Moon = createSvgIcon(<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z" />);
+    const Printer = createSvgIcon(<><polyline points="6 9 6 2 18 2 18 9" /><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2" /><rect x="6" y="14" width="12" height="8" /></>);
+    const User = createSvgIcon(<><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></>);
+    const ShieldCheck = createSvgIcon(<><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" /><path d="m9 12 2 2 4-4" /></>);
+    const CloudRain = createSvgIcon(<><path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" /><path d="M16 14v6" /><path d="M8 14v6" /><path d="M12 16v6" /></>);
+    const Activity = createSvgIcon(<path d="M22 12h-4l-3 9L9 3l-3 9H2" />);
+    const BookOpen = createSvgIcon(<><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z" /><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z" /></>);
+    const Layers = createSvgIcon(<><polygon points="12 2 2 7 12 12 22 7 12 2" /><polyline points="2 17 12 22 22 17" /><polyline points="2 12 12 17 22 12" /></>);
+    const Folder = createSvgIcon(<path d="M4 20h16a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-7.93a2 2 0 0 1-1.66-.9l-.82-1.2A2 2 0 0 0 7.93 3H4a2 2 0 0 0-2 2v13c0 1.1.9 2 2 2Z" />);
+    const Download = createSvgIcon(<><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" /><polyline points="7 10 12 15 17 10" /><line x1="12" y1="15" x2="12" y2="3" /></>);
+    const Check = createSvgIcon(<polyline points="20 6 9 17 4 12" />);
+    const LogOut = createSvgIcon(<><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" /><polyline points="16 17 21 12 16 7" /><line x1="21" y1="12" x2="9" y2="12" /></>);
+    const Zap = createSvgIcon(<polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />);
+    const Leaf = createSvgIcon(<path d="M11 20A7 7 0 0 1 9.8 6.1C15.5 5 17 4.48 19 2c1 2 2 4.18 2 8 0 5.5-4.78 10-10 10Z" />);
+    const X = createSvgIcon(<><line x1="18" y1="6" x2="6" y2="18" /><line x1="6" y1="6" x2="18" y2="18" /></>);
+    const Loader2 = createSvgIcon(<path d="M21 12a9 9 0 1 1-6.219-8.56" />);
+
+    // ==========================================
+    // CONSTANTS & PRESETS
+    // ==========================================
+    const DEMO_USERS = [
+      {
+        id: "usr-1",
+        name: "Akshat Kanchan",
+        email: "akshat.kanchan@mpgi.edu.in",
+        role: "Student Researcher (BCA)",
+        institution: "Maharana Pratap Group of Professional Studies",
+        location: "Kanpur, UP",
+        avatarInitial: "AK"
+      },
+      {
+        id: "usr-2",
+        name: "Dr. S. Sharma",
+        email: "principal@mpgi.edu.in",
+        role: "Campus Director / Faculty",
+        institution: "Maharana Pratap Campus",
+        location: "Kanpur, UP",
+        avatarInitial: "SS"
+      },
+      {
+        id: "usr-3",
+        name: "Vikram Singh",
+        email: "vikram@kisanwater.in",
+        role: "RWH Contractor & Dealer",
+        institution: "Kisan Water Technologies",
+        location: "Lucknow, UP",
+        avatarInitial: "VS"
+      },
+      {
+        id: "usr-4",
+        name: "Ramesh Patel",
+        email: "ramesh.farmer@agro.in",
+        role: "Farm & Land Owner",
+        institution: "Green Valley Farms",
+        location: "Varanasi, UP",
+        avatarInitial: "RP"
+      }
+    ];
+
+    const CITIES_WEATHER = [
+      { id: "kanpur", name: "Kanpur, UP", rainfall: 900, condition: "🌧️ Active Monsoon (34 mm/hr)", temp: "29°C", status: "rainy" },
+      { id: "lucknow", name: "Lucknow, UP", rainfall: 950, condition: "⛈️ Thunderstorm Alert (42 mm/hr)", temp: "28°C", status: "storm" },
+      { id: "delhi", name: "Delhi NCR", rainfall: 750, condition: "⛅ Partly Cloudy (8 mm/hr)", temp: "32°C", status: "cloudy" },
+      { id: "varanasi", name: "Varanasi, UP", rainfall: 1050, condition: "🌧️ Heavy Downpour (48 mm/hr)", temp: "27°C", status: "rainy" },
+      { id: "mumbai", name: "Mumbai, MH", rainfall: 2200, condition: "🌊 Torrential Coastal Rain", temp: "28°C", status: "heavy" },
+      { id: "bengaluru", name: "Bengaluru, KA", rainfall: 850, condition: "🌦️ Intermittent Showers", temp: "24°C", status: "rainy" },
+      { id: "jaipur", name: "Jaipur, RJ", rainfall: 550, condition: "☀️ Dry & Sunny", temp: "35°C", status: "sunny" }
+    ];
+
+    const DEFAULT_SAVED_PROJECTS = [
+      {
+        id: "proj-1",
+        name: "Maharana Pratap Group Campus",
+        type: "Academic Institution",
+        area: 2500,
+        rainfall: 900,
+        date: "2026-08-25",
+        annualYield: 1912500,
+        status: "Verified BIS IS 15797"
+      },
+      {
+        id: "proj-2",
+        name: "Green Valley Agriculture Shed",
+        type: "Farming & Warehouse",
+        area: 1200,
+        rainfall: 950,
+        date: "2026-08-20",
+        annualYield: 969000,
+        status: "Active Field Audit"
+      },
+      {
+        id: "proj-3",
+        name: "Urban Polytechnic Science Block",
+        type: "Technical College",
+        area: 3200,
+        rainfall: 820,
+        date: "2026-08-15",
+        annualYield: 2230400,
+        status: "Proposal Stage"
+      }
+    ];
+
+    const FARM_PRESETS = [
+      { id: "shed", name: "🏡 Small Shed / House", areaSqFt: 500, areaM2: 46 },
+      { id: "medium", name: "🌾 Medium Barn / Shed", areaSqFt: 2000, areaM2: 185 },
+      { id: "large", name: "🏭 Large Farm Storage", areaSqFt: 5000, areaM2: 465 },
+      { id: "greenhouse", name: "🏬 Greenhouse / Campus", areaSqFt: 10000, areaM2: 930 }
+    ];
+
+    const KISAN_PROMPTS = [
+      "🌾 What is the lowest-cost filter for farm rainwater?",
+      "🛢️ How much water tank capacity do I need for 4 people?",
+      "🚿 How do I build a simple DIY first-flush pipe?",
+      "💧 How much rainwater can I harvest from 2,000 sq ft roof?",
+      "⚡ How much electricity money can I save by recharging ground borewells?"
+    ];
+
+    const DEFAULT_CHAT = [
+      { id: "m-1", sender: "assistant", text: "Namaste! I am Kisan AI, your smart water advisor. Ask me anything about rainwater harvesting, tank sizing, filter designs, or borewell artificial recharge!" }
+    ];
+
+    // ==========================================
+    // MAIN APP CONTEXT
+    // ==========================================
+    const AppContext = createContext();
+
+    const AppProvider = ({ children }) => {
+      // User Auth State
+      const [currentUser, setCurrentUser] = useState(() => {
+        const saved = localStorage.getItem("aquaharvest_user");
+        return saved ? JSON.parse(saved) : DEMO_USERS[0];
+      });
+      const [showAuthModal, setShowAuthModal] = useState(false);
+      const [showProfileModal, setShowProfileModal] = useState(false);
+      const [showProjectsModal, setShowProjectsModal] = useState(false);
+
+      // Mode & Navigation
+      const [appMode, setAppMode] = useState('academic'); // 'academic' | 'farmer'
+      const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard', 'survey', 'calc', 'schematic', 'cost', 'iot', 'report', 'farmer_calc', 'dealer_quote', 'kisan_ai'
+      const [theme, setTheme] = useState('farmer-light');
+
+      // Site Assessment Data (Academic Mode)
+      const [siteData, setSiteData] = useState({
+        campusName: "Maharana Pratap Group of Professional Studies",
+        buildingName: "Main Academic & Administrative Block",
+        surveyor: "Akshat Kanchan (BCA 2026)",
+        area: 2500, // m²
+        rainfall: 900, // mm
+        material: "rcc", // 'rcc', 'metal', 'tiles'
+        soilType: "sandy_loam",
+        dailyDemand: 5500, // L/day
+        waterTariffRate: 45 // INR / kL
+      });
+
+      // Quick Calculator State (Farmer Mode)
+      const [roofSqFt, setRoofSqFt] = useState(2000);
+      const [farmerRainfall, setFarmerRainfall] = useState(900);
+      const [familySize, setFamilySize] = useState(4);
+      const [selectedFarmPreset, setSelectedFarmPreset] = useState('medium');
+
+      // Dealer Quote State
+      const [quoteConfig, setQuoteConfig] = useState({
+        tankCapacity: 5000,
+        pipeLength: 35,
+        filterType: 'diverter_sediment'
+      });
+
+      // IoT & Live Sensor Simulation State
+      const [selectedCity, setSelectedCity] = useState(CITIES_WEATHER[0]);
+      const [isStormActive, setIsStormActive] = useState(false);
+      const [tankWaterLevelPct, setTankWaterLevelPct] = useState(72);
+      const [solenoidValveOpen, setSolenoidValveOpen] = useState(true);
+      const [submersiblePumpOn, setSubmersiblePumpOn] = useState(false);
+      const [turbidityNtu, setTurbidityNtu] = useState(2.4);
+      const [waterTableMeters, setWaterTableMeters] = useState(21.4);
+
+      // Saved Projects
+      const [savedProjects, setSavedProjects] = useState(() => {
+        const saved = localStorage.getItem("aquaharvest_projects");
+        return saved ? JSON.parse(saved) : DEFAULT_SAVED_PROJECTS;
+      });
+
+      // Chat Messages
+      const [messages, setMessages] = useState(DEFAULT_CHAT);
+      const [isGenerating, setIsGenerating] = useState(false);
+
+      // Sync User & Theme
+      useEffect(() => {
+        document.documentElement.setAttribute('data-theme', theme);
+      }, [theme]);
+
+      useEffect(() => {
+        localStorage.setItem("aquaharvest_user", JSON.stringify(currentUser));
+      }, [currentUser]);
+
+      useEffect(() => {
+        localStorage.setItem("aquaharvest_projects", JSON.stringify(savedProjects));
+      }, [savedProjects]);
+
+      // Calculations for Academic Mode
+      const academicResults = useMemo(() => {
+        const coeffMap = { rcc: 0.85, metal: 0.90, tiles: 0.75 };
+        const coeff = coeffMap[siteData.material] || 0.85;
+        const filterEff = 0.90;
+
+        // Annual Yield in Liters: Area (m²) * Rainfall (m) * Coeff * FilterEff * 1000
+        const annualYield = Math.round(siteData.area * (siteData.rainfall / 1000) * coeff * filterEff * 1000);
+        const storageVolume = Math.round(annualYield * 0.30);
+        const rechargeVolume = Math.round(annualYield * 0.70);
+        const firstFlushVolume = Math.round(siteData.area * 1.5); // 1.5 mm dirt wash = 1.5 L/m²
+        const peakDischargeLps = ((coeff * 50 * siteData.area) / 3600).toFixed(1); // 50 mm/hr peak
+
+        // Financials
+        const annualSavings = Math.round((annualYield / 1000) * siteData.waterTariffRate);
+        const estimatedCapex = 245000;
+        const paybackYears = (estimatedCapex / annualSavings).toFixed(2);
+
+        // Environmental Impact
+        const co2AvoidedKg = Math.round((annualYield / 1000) * 1.4); // 1.4 kg CO2 per kL pumped
+        const demandOffsetPct = Math.min(100, Math.round((annualYield / (siteData.dailyDemand * 300)) * 100));
+
+        return {
+          annualYield,
+          storageVolume,
+          rechargeVolume,
+          firstFlushVolume,
+          peakDischargeLps,
+          annualSavings,
+          estimatedCapex,
+          paybackYears,
+          co2AvoidedKg,
+          demandOffsetPct,
+          coeff
+        };
+      }, [siteData]);
+
+      // Calculations for Farmer Mode
+      const farmerResults = useMemo(() => {
+        const roofM2 = Math.round(roofSqFt / 10.764);
+        const annualYieldLiters = Math.round(roofM2 * (farmerRainfall / 1000) * 0.85 * 1000);
+        const recommendedTankLiters = Math.max(1000, Math.round(annualYieldLiters * 0.18));
+        const moneySaved = Math.round((annualYieldLiters / 1000) * 40);
+        const autonomyDays = Math.round(recommendedTankLiters / (familySize * 135));
+
+        return {
+          roofM2,
+          annualYieldLiters,
+          recommendedTankLiters,
+          moneySaved,
+          autonomyDays
+        };
+      }, [roofSqFt, farmerRainfall, familySize]);
+
+      // Dealer Pricing Computation
+      const dealerQuote = useMemo(() => {
+        const tankPrices = { 1000: 8500, 2000: 16000, 5000: 34000, 10000: 65000, 20000: 120000 };
+        const filterPrices = { basic: 4500, diverter_sediment: 12500, uv_purifier: 28000 };
+        const pipePricePerMeter = 240;
+
+        const tankCost = tankPrices[quoteConfig.tankCapacity] || Math.round(quoteConfig.tankCapacity * 7);
+        const pipeCost = quoteConfig.pipeLength * pipePricePerMeter;
+        const filterCost = filterPrices[quoteConfig.filterType] || 12500;
+        const laborCost = Math.round((tankCost + pipeCost + filterCost) * 0.18);
+        const total = tankCost + pipeCost + filterCost + laborCost;
+
+        return { tankCost, pipeCost, filterCost, laborCost, total };
+      }, [quoteConfig]);
+
+      // Handle Storm Simulator
+      const triggerStormSimulation = () => {
+        setIsStormActive(true);
+        setTurbidityNtu(6.8); // trigger filter alert
+        setTankWaterLevelPct(94);
+        setWaterTableMeters(prev => Math.max(18.0, +(prev - 0.4).toFixed(1)));
+
+        setTimeout(() => {
+          setIsStormActive(false);
+          setTurbidityNtu(2.1);
+        }, 5000);
+      };
+
+      // Handle Saving Current Project
+      const saveCurrentProject = () => {
+        const newProj = {
+          id: `proj-${Date.now()}`,
+          name: siteData.campusName,
+          type: "Rooftop Rainwater Assessment",
+          area: siteData.area,
+          rainfall: siteData.rainfall,
+          date: new Date().toISOString().split('T')[0],
+          annualYield: academicResults.annualYield,
+          status: "Saved by " + currentUser.name
+        };
+        setSavedProjects(prev => [newProj, ...prev]);
+        alert("Project assessment saved to your account successfully!");
+      };
+
+      // Handle Chat
+      const handleSendMessage = (text) => {
+        if (!text.trim() || isGenerating) return;
+        setMessages(prev => [...prev, { id: `m-${Date.now()}`, sender: "user", text }]);
+        setIsGenerating(true);
+
+        setTimeout(() => {
+          let reply = `Namaste ${currentUser.name}! Based on your current site configuration:\n- **Catchment Area**: ${siteData.area} m² (${(siteData.area * 10.764).toFixed(0)} sq ft)\n- **Annual Rainwater Yield**: **${academicResults.annualYield.toLocaleString()} Liters** (~${(academicResults.annualYield/100000).toFixed(2)} Lakh Liters)\n- **Demand Offset**: ${academicResults.demandOffsetPct}%\n- **Estimated Payback**: **${academicResults.paybackYears} Years**.\n\nDual-media reverse sand filtration and slotted injection wells are strongly recommended under BIS IS 15797:2008.`;
+
+          if (text.toLowerCase().includes('filter') || text.toLowerCase().includes('cost')) {
+            reply = `For cost-effective institutional & farm filtration:\n1. **Stainless Steel Leaf Strainer**: ₹1,800\n2. **Automated First-Flush Floating Chamber**: ₹2,500\n3. **Dual-Media Sand + Activated Charcoal Filter Bed**: ₹14,000\n\nThis captures >92% of suspended sediment and keeps borewells free of clogging!`;
+          } else if (text.toLowerCase().includes('recharge') || text.toLowerCase().includes('borewell')) {
+            reply = `For artificial groundwater recharge in alluvial soils (water table at ${waterTableMeters}m bgl):\n- Drill a **150 mm slotted PVC casing** to 24m depth.\n- Surround with graded gravel pack ($15-30 mm$).\n- Feed filtered overflow from the storage cistern to achieve up to **1.2 Million Liters of direct aquifer recharge** per monsoon!`;
+          }
+
+          setMessages(prev => [...prev, { id: `m-${Date.now() + 1}`, sender: "assistant", text: reply }]);
+          setIsGenerating(false);
+        }, 800);
+      };
+
+      return (
+        <AppContext.Provider value={{
+          currentUser, setCurrentUser,
+          showAuthModal, setShowAuthModal,
+          showProfileModal, setShowProfileModal,
+          showProjectsModal, setShowProjectsModal,
+          appMode, setAppMode,
+          activeTab, setActiveTab,
+          theme, setTheme,
+          siteData, setSiteData,
+          academicResults,
+          roofSqFt, setRoofSqFt,
+          farmerRainfall, setFarmerRainfall,
+          familySize, setFamilySize,
+          selectedFarmPreset, setSelectedFarmPreset,
+          farmerResults,
+          quoteConfig, setQuoteConfig,
+          dealerQuote,
+          selectedCity, setSelectedCity,
+          isStormActive, triggerStormSimulation,
+          tankWaterLevelPct, setTankWaterLevelPct,
+          solenoidValveOpen, setSolenoidValveOpen,
+          submersiblePumpOn, setSubmersiblePumpOn,
+          turbidityNtu,
+          waterTableMeters,
+          savedProjects, setSavedProjects,
+          saveCurrentProject,
+          messages, handleSendMessage, isGenerating
+        }}>
+          {children}
+        </AppContext.Provider>
+      );
+    };
+
+    const useApp = () => useContext(AppContext);
+
+    // ==========================================
+    // SIDEBAR NAVIGATION
+    // ==========================================
+    const Sidebar = () => {
+      const { appMode, setAppMode, activeTab, setActiveTab, savedProjects, setShowProjectsModal } = useApp();
+
+      const academicNav = [
+        { id: 'dashboard', label: '1. Executive Dashboard', icon: Activity },
+        { id: 'survey', label: '2. On-Spot Field Survey', icon: Wrench },
+        { id: 'calc', label: '3. Hydro Calculation Engine', icon: Calculator },
+        { id: 'schematic', label: '4. Interactive 2D/3D Schematic', icon: Layers },
+        { id: 'cost', label: '5. Cost, BOQ & ROI Analyzer', icon: Zap },
+        { id: 'iot', label: '6. Smart IoT & Sensor Telemetry', icon: CloudRain },
+        { id: 'report', label: '7. 20-Chapter Synopsis & Docs', icon: BookOpen }
+      ];
+
+      const farmerNav = [
+        { id: 'farmer_calc', label: '1. Quick Farm & Shed Calculator', icon: Calculator },
+        { id: 'dealer_quote', label: '2. Dealer Quotation & Invoice', icon: Wrench },
+        { id: 'kisan_ai', label: '3. Kisan AI Water Assistant', icon: Bot }
+      ];
+
+      const navList = appMode === 'academic' ? academicNav : farmerNav;
+
+      return (
+        <aside className="sidebar">
+          <div>
+            <div className="brand-container">
+              <div className="brand-icon"><Droplets size={26} color="#ffffff" /></div>
+              <div>
+                <h1 className="brand-title">AquaHarvest</h1>
+                <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: '700' }}>
+                  {appMode === 'academic' ? '🎓 College & Engineering Suite' : '🚜 Farmer & Dealer App'}
+                </span>
+              </div>
+            </div>
+
+            {/* Mode Switcher Banner */}
+            <div className="mode-toggle-box">
+              <button 
+                className={`mode-toggle-btn ${appMode === 'academic' ? 'active' : ''}`}
+                onClick={() => { setAppMode('academic'); setActiveTab('dashboard'); }}
+              >
+                <span>🎓 Academic</span>
+              </button>
+              <button 
+                className={`mode-toggle-btn ${appMode === 'farmer' ? 'active' : ''}`}
+                onClick={() => { setAppMode('farmer'); setActiveTab('farmer_calc'); }}
+              >
+                <span>🚜 Farmer/Dealer</span>
+              </button>
+            </div>
+
+            <div className="nav-section-title">
+              {appMode === 'academic' ? 'Engineering Modules' : 'Quick Tools'}
+            </div>
+
+            <nav className="nav-menu">
+              {navList.map(item => {
+                const Icon = item.icon;
+                const isActive = activeTab === item.id;
+                return (
+                  <button key={item.id} className={`nav-item ${isActive ? 'active' : ''}`} onClick={() => setActiveTab(item.id)}>
+                    <Icon size={18} />
+                    <span>{item.label}</span>
+                  </button>
+                );
+              })}
+            </nav>
+          </div>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem' }}>
+            <button className="action-btn" style={{ width: '100%', justifyContent: 'center' }} onClick={() => setShowProjectsModal(true)}>
+              <Folder size={16} />
+              <span>Saved Audits ({savedProjects.length})</span>
+            </button>
+
+            <div style={{ background: 'var(--bg-glass)', padding: '0.75rem', borderRadius: '12px', border: '1px solid var(--border-glass)' }}>
+              <div style={{ fontSize: '0.8rem', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '0.35rem' }}>
+                <ShieldCheck size={14} color="var(--accent-primary)" />
+                <span>BIS IS 15797:2008</span>
+              </div>
+              <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>CGWB Compliant Model</div>
+            </div>
+          </div>
+        </aside>
+      );
+    };
+
+    // ==========================================
+    // TOP HEADER
+    // ==========================================
+    const Header = () => {
+      const { 
+        currentUser, setShowAuthModal, setShowProfileModal, 
+        theme, setTheme, selectedCity, setSelectedCity, triggerStormSimulation, isStormActive,
+        activeTab
+      } = useApp();
+
+      return (
+        <header className="header">
+          <div className="header-title-group">
+            <span style={{ fontSize: '1.2rem' }}>💧</span>
+            <div>
+              <h2 className="header-title">AquaHarvest Hydro Studio</h2>
+              <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '600' }}>
+                Maharana Pratap Group • BCA 2026
+              </span>
+            </div>
+          </div>
+
+          <div className="header-actions">
+            {/* Live Weather Simulator Dropdown */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', background: 'var(--bg-surface-elevated)', padding: '0.35rem 0.75rem', borderRadius: '10px', border: '1.5px solid var(--border-glass)' }}>
+              <CloudRain size={16} color="var(--accent-blue)" />
+              <select 
+                style={{ background: 'transparent', border: 'none', color: 'var(--text-primary)', fontWeight: '700', fontSize: '0.85rem', outline: 'none', cursor: 'pointer' }}
+                value={selectedCity.id}
+                onChange={(e) => {
+                  const c = CITIES_WEATHER.find(x => x.id === e.target.value);
+                  if (c) setSelectedCity(c);
+                }}
+              >
+                {CITIES_WEATHER.map(city => (
+                  <option key={city.id} value={city.id}>{city.name} ({city.rainfall} mm)</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Storm Simulator Trigger Button */}
+            <button 
+              className={`action-btn ${isStormActive ? 'accent-blue' : ''}`}
+              onClick={triggerStormSimulation}
+              title="Simulate high-intensity monsoon storm"
+            >
+              <Zap size={16} />
+              <span>{isStormActive ? '⛈️ Storm Active!' : '⚡ Test Storm'}</span>
+            </button>
+
+            {/* Theme Toggle */}
+            <button className="action-btn" onClick={() => setTheme(theme === 'farmer-light' ? 'farmer-dark' : 'farmer-light')} title="Toggle Light / Dark theme">
+              {theme === 'farmer-light' ? <Moon size={16} /> : <Sun size={16} />}
+            </button>
+
+            {/* Print Report */}
+            <button className="action-btn" onClick={() => window.print()} title="Print / Export PDF">
+              <Printer size={16} />
+            </button>
+
+            {/* User Account / Profile Button */}
+            <div className="user-profile-btn" onClick={() => setShowProfileModal(true)}>
+              <div className="user-avatar-circle">{currentUser.avatarInitial}</div>
+              <div className="user-info-text">
+                <span className="user-name-label">{currentUser.name.split(' ')[0]}</span>
+                <span className="user-role-badge">{currentUser.role.split(' ')[0]}</span>
+              </div>
+            </div>
+          </div>
+        </header>
+      );
+    };
+
+    // ==========================================
+    // MODAL: USER ACCOUNT & LOGIN
+    // ==========================================
+    const AuthModal = () => {
+      const { showAuthModal, setShowAuthModal, currentUser, setCurrentUser } = useApp();
+      const [authTab, setAuthTab] = useState('login'); // 'login' | 'signup'
+      const [email, setEmail] = useState('');
+      const [password, setPassword] = useState('');
+
+      if (!showAuthModal) return null;
+
+      const handleQuickLogin = (user) => {
+        setCurrentUser(user);
+        setShowAuthModal(false);
+      };
+
+      const handleFormSubmit = (e) => {
+        e.preventDefault();
+        if (!email) return;
+        const newUser = {
+          id: `usr-${Date.now()}`,
+          name: email.split('@')[0],
+          email,
+          role: "Verified Member",
+          institution: "Maharana Pratap Group",
+          location: "Kanpur, UP",
+          avatarInitial: email.charAt(0).toUpperCase()
+        };
+        setCurrentUser(newUser);
+        setShowAuthModal(false);
+      };
+
+      return (
+        <div className="modal-backdrop" onClick={() => setShowAuthModal(false)}>
+          <div className="modal-card" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 className="modal-title">🔐 User Account & Authentication</h3>
+              <button className="action-btn" style={{ padding: '0.4rem' }} onClick={() => setShowAuthModal(false)}><X size={16} /></button>
+            </div>
+
+            <div className="modal-body">
+              <div style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>
+                Select a demo role for 1-click instant login or sign in with your credentials:
+              </div>
+
+              {/* Fast 1-Click Demo Logins */}
+              <div className="role-cards-grid">
+                {DEMO_USERS.map(u => (
+                  <div key={u.id} className="role-select-card" onClick={() => handleQuickLogin(u)}>
+                    <div style={{ fontWeight: '700', fontSize: '0.92rem', color: 'var(--accent-primary)' }}>{u.name}</div>
+                    <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{u.role}</div>
+                    <div style={{ fontSize: '0.72rem', color: 'var(--text-secondary)' }}>🏢 {u.institution}</div>
+                  </div>
+                ))}
+              </div>
+
+              <div style={{ textAlign: 'center', borderBottom: '1px solid var(--border-glass)', lineHeight: '0.1em', margin: '0.5rem 0 1rem' }}>
+                <span style={{ background: 'var(--bg-surface)', padding: '0 10px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>OR SIGN IN MANUALLY</span>
+              </div>
+
+              <form onSubmit={handleFormSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                <div className="form-group">
+                  <label className="form-label">Email Address</label>
+                  <input type="email" required placeholder="user@mpgi.edu.in" className="form-input" value={email} onChange={e => setEmail(e.target.value)} />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Password</label>
+                  <input type="password" required placeholder="••••••••" className="form-input" value={password} onChange={e => setPassword(e.target.value)} />
+                </div>
+
+                <button type="submit" className="action-btn primary" style={{ justifyContent: 'center', padding: '0.85rem' }}>
+                  <User size={18} />
+                  <span>Sign In to AquaHarvest</span>
+                </button>
+              </form>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // ==========================================
+    // MODAL: USER PROFILE & SETTINGS
+    // ==========================================
+    const ProfileModal = () => {
+      const { showProfileModal, setShowProfileModal, currentUser, setCurrentUser, setShowAuthModal } = useApp();
+      const [name, setName] = useState(currentUser.name);
+      const [role, setRole] = useState(currentUser.role);
+      const [institution, setInstitution] = useState(currentUser.institution);
+      const [location, setLocation] = useState(currentUser.location);
+
+      if (!showProfileModal) return null;
+
+      const handleSave = (e) => {
+        e.preventDefault();
+        setCurrentUser({
+          ...currentUser,
+          name,
+          role,
+          institution,
+          location,
+          avatarInitial: name.charAt(0).toUpperCase()
+        });
+        setShowProfileModal(false);
+      };
+
+      return (
+        <div className="modal-backdrop" onClick={() => setShowProfileModal(false)}>
+          <div className="modal-card" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 className="modal-title">👤 User Profile & Settings</h3>
+              <button className="action-btn" style={{ padding: '0.4rem' }} onClick={() => setShowProfileModal(false)}><X size={16} /></button>
+            </div>
+
+            <form onSubmit={handleSave}>
+              <div className="modal-body">
+                <div style={{ display: 'flex', alignItems: 'center', gap: '1rem', marginBottom: '0.5rem' }}>
+                  <div className="user-avatar-circle" style={{ width: '56px', height: '56px', fontSize: '1.4rem' }}>{currentUser.avatarInitial}</div>
+                  <div>
+                    <div style={{ fontSize: '1.1rem', fontWeight: '800' }}>{currentUser.name}</div>
+                    <div style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>{currentUser.email}</div>
+                  </div>
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Full Name</label>
+                  <input className="form-input" value={name} onChange={e => setName(e.target.value)} required />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Designation / Role</label>
+                  <input className="form-input" value={role} onChange={e => setRole(e.target.value)} required />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">College / Organization</label>
+                  <input className="form-input" value={institution} onChange={e => setInstitution(e.target.value)} required />
+                </div>
+
+                <div className="form-group">
+                  <label className="form-label">Site City / Location</label>
+                  <input className="form-input" value={location} onChange={e => setLocation(e.target.value)} required />
+                </div>
+              </div>
+
+              <div className="modal-footer">
+                <button type="button" className="action-btn danger" onClick={() => { setShowProfileModal(false); setShowAuthModal(true); }}>
+                  <LogOut size={16} />
+                  <span>Switch Account</span>
+                </button>
+                <button type="submit" className="action-btn primary">
+                  <Check size={16} />
+                  <span>Save Changes</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      );
+    };
+
+    // ==========================================
+    // MODAL: SAVED AUDITS & PROJECTS
+    // ==========================================
+    const ProjectsModal = () => {
+      const { showProjectsModal, setShowProjectsModal, savedProjects, setSavedProjects, setSiteData, setActiveTab, setAppMode } = useApp();
+
+      if (!showProjectsModal) return null;
+
+      const handleLoadProject = (proj) => {
+        setSiteData(prev => ({
+          ...prev,
+          campusName: proj.name,
+          area: proj.area,
+          rainfall: proj.rainfall
+        }));
+        setAppMode('academic');
+        setActiveTab('dashboard');
+        setShowProjectsModal(false);
+      };
+
+      const handleDelete = (id) => {
+        setSavedProjects(prev => prev.filter(p => p.id !== id));
+      };
+
+      return (
+        <div className="modal-backdrop" onClick={() => setShowProjectsModal(false)}>
+          <div className="modal-card" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3 className="modal-title">📁 Saved Campus Assessments & Audits</h3>
+              <button className="action-btn" style={{ padding: '0.4rem' }} onClick={() => setShowProjectsModal(false)}><X size={16} /></button>
+            </div>
+
+            <div className="modal-body">
+              {savedProjects.length === 0 ? (
+                <div style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '2rem' }}>No saved assessments found.</div>
+              ) : (
+                savedProjects.map(proj => (
+                  <div key={proj.id} style={{ background: 'var(--bg-surface-elevated)', border: '1.5px solid var(--border-glass)', borderRadius: '12px', padding: '1rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <div>
+                      <div style={{ fontWeight: '800', fontSize: '0.98rem' }}>{proj.name}</div>
+                      <div style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>
+                        Area: <strong>{proj.area} m²</strong> • Rainfall: <strong>{proj.rainfall} mm</strong> • Yield: <strong>{proj.annualYield.toLocaleString()} L</strong>
+                      </div>
+                      <div style={{ fontSize: '0.72rem', color: 'var(--accent-primary)', fontWeight: '700', marginTop: '0.2rem' }}>
+                        {proj.status} • {proj.date}
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '0.5rem' }}>
+                      <button className="action-btn primary" style={{ padding: '0.45rem 0.85rem' }} onClick={() => handleLoadProject(proj)}>
+                        <span>Load</span>
+                      </button>
+                      <button className="action-btn" style={{ padding: '0.45rem' }} onClick={() => handleDelete(proj.id)}>
+                        <X size={14} color="#ef4444" />
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+
+            <div className="modal-footer">
+              <button className="action-btn" onClick={() => setShowProjectsModal(false)}>Close</button>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // ==========================================
+    // TAB 1: ACADEMIC EXECUTIVE DASHBOARD
+    // ==========================================
+    const AcademicDashboard = () => {
+      const { siteData, setSiteData, academicResults, setActiveTab, saveCurrentProject, selectedCity } = useApp();
+
+      return (
+        <div className="fade-in">
+          {/* Top Live Weather Strip */}
+          <div className="weather-card">
+            <div className="weather-header">
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                <CloudRain size={24} color="var(--accent-blue)" />
+                <div>
+                  <div style={{ fontWeight: '800', fontSize: '1.05rem' }}>Live Regional Precipitation: {selectedCity.name}</div>
+                  <div style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>{selectedCity.condition} • Temp {selectedCity.temp}</div>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <button className="action-btn" onClick={saveCurrentProject}>
+                  <Folder size={16} />
+                  <span>Save Audit to Account</span>
+                </button>
+                <button className="action-btn primary" onClick={() => setActiveTab('calc')}>
+                  <Calculator size={16} />
+                  <span>Adjust Hydro Parameters</span>
+                </button>
+              </div>
+            </div>
+
+            {/* 7-Day Monsoon Forecast */}
+            <div className="forecast-grid">
+              {[
+                { day: "Mon", rain: 24, status: "active-rain" },
+                { day: "Tue", rain: 42, status: "active-rain" },
+                { day: "Wed", rain: 15, status: "active-rain" },
+                { day: "Thu", rain: 8, status: "" },
+                { day: "Fri", rain: 35, status: "active-rain" },
+                { day: "Sat", rain: 60, status: "active-rain" },
+                { day: "Sun", rain: 18, status: "active-rain" }
+              ].map((f, i) => (
+                <div key={i} className={`forecast-day-chip ${f.status}`}>
+                  <span style={{ fontWeight: '700' }}>{f.day}</span>
+                  <span style={{ fontSize: '1.1rem' }}>{f.rain > 20 ? '🌧️' : '🌦️'}</span>
+                  <span style={{ fontWeight: '800', color: 'var(--accent-blue)' }}>{f.rain} mm</span>
+                  <span style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>~{Math.round(siteData.area * f.rain * 0.85).toLocaleString()} L</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Core Benchmark KPIs */}
+          <div className="kpi-row">
+            <div className="kpi-card">
+              <span className="kpi-label">Total Annual Harvest</span>
+              <span className="kpi-value">{academicResults.annualYield.toLocaleString()} L</span>
+              <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: '600' }}>
+                ~{(academicResults.annualYield / 1000).toFixed(1)} m³ pristine runoff
+              </span>
+            </div>
+
+            <div className="kpi-card">
+              <span className="kpi-label">Aquifer Artificial Recharge</span>
+              <span className="kpi-value" style={{ color: 'var(--accent-blue)' }}>{academicResults.rechargeVolume.toLocaleString()} L</span>
+              <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: '600' }}>
+                70% direct slotted injection well
+              </span>
+            </div>
+
+            <div className="kpi-card">
+              <span className="kpi-label">Annual Utility Savings</span>
+              <span className="kpi-value" style={{ color: 'var(--accent-amber)' }}>₹{academicResults.annualSavings.toLocaleString()}</span>
+              <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: '600' }}>
+                Payback in <strong>{academicResults.paybackYears} Years</strong>
+              </span>
+            </div>
+
+            <div className="kpi-card">
+              <span className="kpi-label">Campus Demand Offset</span>
+              <span className="kpi-value" style={{ color: 'var(--accent-emerald)' }}>{academicResults.demandOffsetPct}%</span>
+              <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)', fontWeight: '600' }}>
+                Saves <strong>{academicResults.co2AvoidedKg} kg CO₂ / yr</strong>
+              </span>
+            </div>
+          </div>
+
+          {/* Quick Details Grid */}
+          <div className="calc-grid">
+            <div className="metric-card">
+              <div style={{ fontSize: '1.05rem', fontWeight: '800', color: 'var(--accent-primary)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Layers size={20} />
+                <span>Rooftop Catchment & Site Profile</span>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem' }}>
+                <div>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Target Institution</div>
+                  <div style={{ fontWeight: '700' }}>{siteData.campusName}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Surveyor</div>
+                  <div style={{ fontWeight: '700' }}>{siteData.surveyor}</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Catchment Area</div>
+                  <div style={{ fontWeight: '800', color: 'var(--accent-primary)', fontSize: '1.1rem' }}>{siteData.area} m²</div>
+                </div>
+                <div>
+                  <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Roof Material</div>
+                  <div style={{ fontWeight: '700', textTransform: 'uppercase' }}>{siteData.material} (C = {academicResults.coeff})</div>
+                </div>
+              </div>
+
+              <div style={{ background: 'var(--bg-glass)', padding: '1rem', borderRadius: '12px', border: '1px solid var(--border-glass)' }}>
+                <div style={{ fontWeight: '700', fontSize: '0.85rem', marginBottom: '0.25rem' }}>First-Flush Diversion Volume:</div>
+                <div style={{ fontSize: '0.95rem', fontWeight: '800', color: 'var(--accent-amber)' }}>{academicResults.firstFlushVolume} Liters (1.5 mm dirt wash)</div>
+              </div>
+            </div>
+
+            <div className="metric-card">
+              <div style={{ fontSize: '1.05rem', fontWeight: '800', color: 'var(--accent-blue)', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                <Activity size={20} />
+                <span>Engineering Water Balance Breakdown</span>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.85rem' }}>
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: '700', marginBottom: '0.25rem' }}>
+                    <span>Surface Storage Cisterns (30%)</span>
+                    <span>{academicResults.storageVolume.toLocaleString()} L</span>
+                  </div>
+                  <div style={{ width: '100%', height: '8px', background: 'var(--border-glass)', borderRadius: '4px', overflow: 'hidden' }}>
+                    <div style={{ width: '30%', height: '100%', background: 'var(--accent-primary)' }}></div>
+                  </div>
+                </div>
+
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: '700', marginBottom: '0.25rem' }}>
+                    <span>Artificial Aquifer Recharge (70%)</span>
+                    <span>{academicResults.rechargeVolume.toLocaleString()} L</span>
+                  </div>
+                  <div style={{ width: '100%', height: '8px', background: 'var(--border-glass)', borderRadius: '4px', overflow: 'hidden' }}>
+                    <div style={{ width: '70%', height: '100%', background: 'var(--accent-blue)' }}></div>
+                  </div>
+                </div>
+
+                <div>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', fontWeight: '700', marginBottom: '0.25rem' }}>
+                    <span>Peak 50mm/hr Storm Flow Rate</span>
+                    <span>{academicResults.peakDischargeLps} L/s</span>
+                  </div>
+                  <div style={{ width: '100%', height: '8px', background: 'var(--border-glass)', borderRadius: '4px', overflow: 'hidden' }}>
+                    <div style={{ width: '85%', height: '100%', background: 'var(--accent-amber)' }}></div>
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.5rem' }}>
+                <button className="action-btn primary" style={{ flex: 1, justifyContent: 'center' }} onClick={() => setActiveTab('schematic')}>
+                  <Layers size={16} />
+                  <span>View 2D/3D Schematic</span>
+                </button>
+                <button className="action-btn" style={{ flex: 1, justifyContent: 'center' }} onClick={() => setActiveTab('report')}>
+                  <BookOpen size={16} />
+                  <span>Read Synopsis Chapters</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // ==========================================
+    // TAB 2: ON-SPOT FIELD SURVEY AUDIT
+    // ==========================================
+    const FieldSurveyAudit = () => {
+      const { siteData, setSiteData } = useApp();
+
+      return (
+        <div className="fade-in">
+          <div className="metric-card" style={{ marginBottom: '1.5rem' }}>
+            <h3 style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--accent-primary)' }}>
+              📋 Standardized On-Spot Field Survey & Audit Checklist
+            </h3>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+              In accordance with Central Ground Water Board (CGWB) & BIS IS 15797:2008 field verification protocols.
+            </p>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1rem', marginTop: '0.5rem' }}>
+              <div className="form-group">
+                <label className="form-label">Campus / Site Name</label>
+                <input className="form-input" value={siteData.campusName} onChange={e => setSiteData({ ...siteData, campusName: e.target.value })} />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Building / Block Name</label>
+                <input className="form-input" value={siteData.buildingName} onChange={e => setSiteData({ ...siteData, buildingName: e.target.value })} />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Catchment Roof Area (m²)</label>
+                <input type="number" className="form-input" value={siteData.area} onChange={e => setSiteData({ ...siteData, area: +e.target.value })} />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Roof Surface Material</label>
+                <select className="form-select" value={siteData.material} onChange={e => setSiteData({ ...siteData, material: e.target.value })}>
+                  <option value="rcc">RCC Flat Concrete (C = 0.85)</option>
+                  <option value="metal">Corrugated GI / Metal Sheet (C = 0.90)</option>
+                  <option value="tiles">Clay Mangalore Tiles (C = 0.75)</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Annual Precipitation (mm/year)</label>
+                <input type="number" className="form-input" value={siteData.rainfall} onChange={e => setSiteData({ ...siteData, rainfall: +e.target.value })} />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Daily Non-Potable Water Demand (L/day)</label>
+                <input type="number" className="form-input" value={siteData.dailyDemand} onChange={e => setSiteData({ ...siteData, dailyDemand: +e.target.value })} />
+              </div>
+            </div>
+          </div>
+
+          <div className="metric-card">
+            <h4 style={{ fontSize: '1rem', fontWeight: '800' }}>Inspection Verification Checklist</h4>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', marginTop: '0.5rem' }}>
+              {[
+                "Parapet & gutter slope verified at minimum 1:100 (1%) to eliminate standing water",
+                "110 mm PVC vertical downpipes equipped with 2.0 mm stainless steel leaf strainers",
+                "Floating-ball mechanical first-flush diverter installed on all downpipes",
+                "Dual-media filter bed (sand 0.5-1mm, activated charcoal, graded gravel) inspected",
+                "Recharge injection well isolated at least 15 meters from any sewer or septic line"
+              ].map((item, idx) => (
+                <label key={idx} style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '0.9rem', cursor: 'pointer' }}>
+                  <input type="checkbox" defaultChecked style={{ width: '18px', height: '18px', accentColor: 'var(--accent-primary)' }} />
+                  <span>{item}</span>
+                </label>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // ==========================================
+    // TAB 3: HYDRO CALCULATION ENGINE
+    // ==========================================
+    const HydroCalculationEngine = () => {
+      const { siteData, setSiteData, academicResults } = useApp();
+
+      return (
+        <div className="fade-in">
+          <div className="calc-grid">
+            <div className="metric-card">
+              <h3 style={{ fontSize: '1.15rem', fontWeight: '800', color: 'var(--accent-primary)' }}>
+                ⚙️ Dynamic Hydro-Meteorological Parameters
+              </h3>
+
+              <div className="form-group">
+                <div className="form-label">
+                  <span>Catchment Area ($A$)</span>
+                  <span style={{ fontWeight: '800', color: 'var(--accent-primary)' }}>{siteData.area} m²</span>
+                </div>
+                <input type="range" min="200" max="10000" step="50" className="range-slider" value={siteData.area} onChange={e => setSiteData({ ...siteData, area: +e.target.value })} />
+              </div>
+
+              <div className="form-group">
+                <div className="form-label">
+                  <span>Annual Rainfall ($R$)</span>
+                  <span style={{ fontWeight: '800', color: 'var(--accent-blue)' }}>{siteData.rainfall} mm</span>
+                </div>
+                <input type="range" min="300" max="2500" step="25" className="range-slider" value={siteData.rainfall} onChange={e => setSiteData({ ...siteData, rainfall: +e.target.value })} />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Runoff Coefficient ($C$)</label>
+                <select className="form-select" value={siteData.material} onChange={e => setSiteData({ ...siteData, material: e.target.value })}>
+                  <option value="rcc">RCC Flat Concrete ($C = 0.85$)</option>
+                  <option value="metal">Corrugated GI Metal ($C = 0.90$)</option>
+                  <option value="tiles">Clay Tiles ($C = 0.75$)</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Commercial Water Tariff Rate</label>
+                <input type="number" className="form-input" value={siteData.waterTariffRate} onChange={e => setSiteData({ ...siteData, waterTariffRate: +e.target.value })} />
+              </div>
+            </div>
+
+            <div className="metric-card">
+              <h3 style={{ fontSize: '1.15rem', fontWeight: '800', color: 'var(--accent-blue)' }}>
+                📐 Rational Formula Mathematical Output
+              </h3>
+
+              <div style={{ background: 'var(--bg-glass)', padding: '1rem', borderRadius: '12px', fontFamily: 'monospace', fontSize: '0.95rem' }}>
+                Q = A × R × C × η<br />
+                Q = {siteData.area} × {(siteData.rainfall/1000).toFixed(2)}m × {academicResults.coeff} × 0.90<br />
+                <strong>Q = {academicResults.annualYield.toLocaleString()} Liters / year</strong>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginTop: '0.5rem' }}>
+                <div style={{ background: 'var(--bg-surface)', padding: '0.85rem', borderRadius: '10px', border: '1px solid var(--border-glass)' }}>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Surface Storage</div>
+                  <div style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--accent-primary)' }}>{academicResults.storageVolume.toLocaleString()} L</div>
+                </div>
+
+                <div style={{ background: 'var(--bg-surface)', padding: '0.85rem', borderRadius: '10px', border: '1px solid var(--border-glass)' }}>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Aquifer Recharge</div>
+                  <div style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--accent-blue)' }}>{academicResults.rechargeVolume.toLocaleString()} L</div>
+                </div>
+
+                <div style={{ background: 'var(--bg-surface)', padding: '0.85rem', borderRadius: '10px', border: '1px solid var(--border-glass)' }}>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>First-Flush Volume</div>
+                  <div style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--accent-amber)' }}>{academicResults.firstFlushVolume} L</div>
+                </div>
+
+                <div style={{ background: 'var(--bg-surface)', padding: '0.85rem', borderRadius: '10px', border: '1px solid var(--border-glass)' }}>
+                  <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Annual Savings</div>
+                  <div style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--accent-emerald)' }}>₹{academicResults.annualSavings.toLocaleString()}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // ==========================================
+    // TAB 4: INTERACTIVE 2D/3D SYSTEM SCHEMATIC
+    // ==========================================
+    const SystemSchematicView = () => {
+      const { siteData, academicResults } = useApp();
+
+      return (
+        <div className="fade-in">
+          <div className="metric-card">
+            <h3 style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--accent-primary)' }}>
+              🏗️ Interactive Hydro-Piping & Hydraulic Schematic
+            </h3>
+            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+              From Rooftop Catchment through First-Flush Purge, Dual-Media Sand Filtration, Storage, and Slotted Recharge Well.
+            </p>
+
+            <div style={{ width: '100%', height: '340px', background: 'var(--bg-surface)', border: '2px solid var(--border-glass)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', position: 'relative', overflow: 'hidden', margin: '1rem 0' }}>
+              <svg width="100%" height="100%" viewBox="0 0 800 320" style={{ maxWidth: '800px' }}>
+                {/* Roof Catchment */}
+                <rect x="40" y="40" width="220" height="40" rx="8" fill="var(--accent-primary)" opacity="0.9" />
+                <text x="150" y="65" fill="#ffffff" fontWeight="700" textAnchor="middle" fontSize="13">🏢 Rooftop Catchment ({siteData.area} m²)</text>
+
+                {/* Gutter & Downpipe */}
+                <line x1="260" y1="60" x2="320" y2="60" stroke="var(--accent-blue)" strokeWidth="6" strokeDasharray="4 2" />
+                <line x1="320" y1="60" x2="320" y2="120" stroke="var(--accent-blue)" strokeWidth="6" />
+
+                {/* First-Flush Chamber */}
+                <rect x="290" y="120" width="60" height="70" rx="6" fill="#f59e0b" opacity="0.85" />
+                <text x="320" y="155" fill="#ffffff" fontWeight="700" textAnchor="middle" fontSize="11">First Flush</text>
+                <text x="320" y="170" fill="#ffffff" fontSize="9" textAnchor="middle">{academicResults.firstFlushVolume} L</text>
+
+                {/* Pipe to Filter */}
+                <line x1="350" y1="130" x2="430" y2="130" stroke="var(--accent-blue)" strokeWidth="5" />
+
+                {/* Dual Media Filter */}
+                <rect x="430" y="100" width="110" height="90" rx="8" fill="#10b981" opacity="0.9" />
+                <text x="485" y="135" fill="#ffffff" fontWeight="700" textAnchor="middle" fontSize="12">Dual Filter</text>
+                <text x="485" y="155" fill="#ffffff" fontSize="9" textAnchor="middle">Sand+Charcoal</text>
+
+                {/* Storage Tank */}
+                <line x1="540" y1="130" x2="610" y2="130" stroke="var(--accent-blue)" strokeWidth="5" />
+                <rect x="610" y="80" width="130" height="110" rx="12" fill="#0284c7" opacity="0.9" />
+                <text x="675" y="125" fill="#ffffff" fontWeight="700" textAnchor="middle" fontSize="12">Storage Cistern</text>
+                <text x="675" y="145" fill="#ffffff" fontSize="10" textAnchor="middle">{academicResults.storageVolume.toLocaleString()} L (30%)</text>
+
+                {/* Recharge Borewell */}
+                <line x1="675" y1="190" x2="675" y2="240" stroke="var(--accent-blue)" strokeWidth="6" strokeDasharray="4 2" />
+                <rect x="600" y="240" width="150" height="60" rx="8" fill="#6366f1" opacity="0.9" />
+                <text x="675" y="265" fill="#ffffff" fontWeight="700" textAnchor="middle" fontSize="11">Subsurface Recharge</text>
+                <text x="675" y="285" fill="#ffffff" fontSize="9" textAnchor="middle">{academicResults.rechargeVolume.toLocaleString()} L (70%)</text>
+              </svg>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // ==========================================
+    // TAB 5: COST, BOQ & ROI ANALYZER
+    // ==========================================
+    const CostRoiView = () => {
+      const { academicResults } = useApp();
+
+      const boqItems = [
+        { name: "150 mm UV-PVC Gutters with Mounting Brackets", qty: "335 m", cost: 73700 },
+        { name: "110 mm Rigid Downpipes & Leaf Screens", qty: "22 units", cost: 20900 },
+        { name: "Automated Floating-Ball First-Flush Chambers", qty: "22 units", cost: 16500 },
+        { name: "Dual-Media Sand & Charcoal Filter Units", qty: "4 units", cost: 34000 },
+        { name: "Excavation & Recharge Pits Filter Media Matrix", qty: "3 units", cost: 54000 },
+        { name: "Deep Slotted PVC Injection Borewell (24m)", qty: "1 unit", cost: 28000 },
+        { name: "Calming Inlets, Piping Network & Flow Meter", qty: "Lump sum", cost: 17900 }
+      ];
+
+      return (
+        <div className="fade-in">
+          <div className="metric-card">
+            <h3 style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--accent-primary)' }}>
+              💰 Itemized Bill of Quantities (BOQ) & Capital Cost
+            </h3>
+
+            <div style={{ overflowX: 'auto', marginTop: '1rem' }}>
+              <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
+                <thead>
+                  <tr style={{ borderBottom: '2px solid var(--border-glass)', color: 'var(--text-muted)' }}>
+                    <th style={{ padding: '0.75rem' }}>Item Description</th>
+                    <th style={{ padding: '0.75rem' }}>Quantity</th>
+                    <th style={{ padding: '0.75rem', textAlign: 'right' }}>Total Cost (₹)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {boqItems.map((item, idx) => (
+                    <tr key={idx} style={{ borderBottom: '1px solid var(--border-glass)' }}>
+                      <td style={{ padding: '0.75rem', fontWeight: '600' }}>{item.name}</td>
+                      <td style={{ padding: '0.75rem', color: 'var(--text-muted)' }}>{item.qty}</td>
+                      <td style={{ padding: '0.75rem', textAlign: 'right', fontWeight: '700' }}>₹{item.cost.toLocaleString()}</td>
+                    </tr>
+                  ))}
+                  <tr style={{ borderTop: '2px solid var(--accent-primary)', fontSize: '1.05rem', fontWeight: '800' }}>
+                    <td colSpan="2" style={{ padding: '0.85rem' }}>TOTAL ESTIMATED CAPEX</td>
+                    <td style={{ padding: '0.85rem', textAlign: 'right', color: 'var(--accent-primary)' }}>₹{academicResults.estimatedCapex.toLocaleString()}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginTop: '1.5rem' }}>
+              <div style={{ background: 'var(--bg-glass)', padding: '1rem', borderRadius: '12px' }}>
+                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Annual Water Savings</div>
+                <div style={{ fontSize: '1.4rem', fontWeight: '800', color: 'var(--accent-emerald)' }}>₹{academicResults.annualSavings.toLocaleString()} / yr</div>
+              </div>
+              <div style={{ background: 'var(--bg-glass)', padding: '1rem', borderRadius: '12px' }}>
+                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>Simple Payback Period</div>
+                <div style={{ fontSize: '1.4rem', fontWeight: '800', color: 'var(--accent-primary)' }}>{academicResults.paybackYears} Years</div>
+              </div>
+              <div style={{ background: 'var(--bg-glass)', padding: '1rem', borderRadius: '12px' }}>
+                <div style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>10-Year Net Benefit</div>
+                <div style={{ fontSize: '1.4rem', fontWeight: '800', color: 'var(--accent-blue)' }}>₹{(academicResults.annualSavings * 10 - academicResults.estimatedCapex).toLocaleString()}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // ==========================================
+    // TAB 6: SMART IOT & TELEMETRY DASHBOARD
+    // ==========================================
+    const SmartIotView = () => {
+      const { 
+        tankWaterLevelPct, setTankWaterLevelPct,
+        solenoidValveOpen, setSolenoidValveOpen,
+        submersiblePumpOn, setSubmersiblePumpOn,
+        turbidityNtu, waterTableMeters, isStormActive
+      } = useApp();
+
+      return (
+        <div className="fade-in">
+          <div className="metric-card">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--accent-primary)' }}>
+                  📡 Cyber-Physical IoT Water Telemetry & Actuator Controls
+                </h3>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                  Live simulated sensor telemetry with automated solenoid purges and pump controllers.
+                </p>
+              </div>
+              {turbidityNtu > 5 && (
+                <div style={{ background: '#ef4444', color: '#fff', padding: '0.4rem 0.8rem', borderRadius: '8px', fontWeight: '700', fontSize: '0.8rem' }}>
+                  ⚠️ Filter Backwash Required
+                </div>
+              )}
+            </div>
+
+            <div className="iot-grid">
+              {/* Tank Level Gauge */}
+              <div className="iot-card">
+                <div style={{ fontWeight: '700', fontSize: '0.9rem' }}>🛢️ Ultrasonic Tank Level</div>
+                <div style={{ fontSize: '2rem', fontWeight: '800', color: 'var(--accent-blue)' }}>{tankWaterLevelPct}%</div>
+                <div style={{ width: '100%', height: '8px', background: 'var(--border-glass)', borderRadius: '4px', overflow: 'hidden' }}>
+                  <div style={{ width: `${tankWaterLevelPct}%`, height: '100%', background: 'var(--accent-blue)', transition: 'width 0.4s ease' }}></div>
+                </div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>High Level Limit: 95%</div>
+              </div>
+
+              {/* Turbidity Sensor */}
+              <div className="iot-card">
+                <div style={{ fontWeight: '700', fontSize: '0.9rem' }}>🔬 Optical Turbidity Sensor</div>
+                <div style={{ fontSize: '2rem', fontWeight: '800', color: turbidityNtu > 5 ? '#ef4444' : 'var(--accent-primary)' }}>
+                  {turbidityNtu} NTU
+                </div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>
+                  {turbidityNtu > 5 ? 'High Turbidity (>5 NTU)' : 'Pristine Filtered Water'}
+                </div>
+              </div>
+
+              {/* Groundwater Table Piezometer */}
+              <div className="iot-card">
+                <div style={{ fontWeight: '700', fontSize: '0.9rem' }}>📍 Groundwater Piezometer</div>
+                <div style={{ fontSize: '2rem', fontWeight: '800', color: 'var(--accent-emerald)' }}>
+                  {waterTableMeters} m
+                </div>
+                <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Depth Below Ground Level (bgl)</div>
+              </div>
+
+              {/* Motorized Valve Actuator Switch */}
+              <div className="iot-card">
+                <div className="iot-toggle-row">
+                  <div>
+                    <div style={{ fontWeight: '700', fontSize: '0.9rem' }}>⚡ Motorized Bypass Valve</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{solenoidValveOpen ? 'OPEN (Diverting)' : 'CLOSED (Filtered)'}</div>
+                  </div>
+                  <label className="switch">
+                    <input type="checkbox" checked={solenoidValveOpen} onChange={e => setSolenoidValveOpen(e.target.checked)} />
+                    <span className="slider-round"></span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Submersible Pump Switch */}
+              <div className="iot-card">
+                <div className="iot-toggle-row">
+                  <div>
+                    <div style={{ fontWeight: '700', fontSize: '0.9rem' }}>🌊 Submersible Delivery Pump</div>
+                    <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{submersiblePumpOn ? 'RUNNING (45 L/min)' : 'OFF / Standby'}</div>
+                  </div>
+                  <label className="switch">
+                    <input type="checkbox" checked={submersiblePumpOn} onChange={e => setSubmersiblePumpOn(e.target.checked)} />
+                    <span className="slider-round"></span>
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // ==========================================
+    // TAB 7: 20-CHAPTER ACADEMIC SYNOPSIS & DOCS
+    // ==========================================
+    const SynopsisDocsView = () => {
+      const [search, setSearch] = useState('');
+      const chapters = [
+        { num: 1, title: "Certificate of Authenticity", summary: "Formal academic submission certificate under BCA curriculum." },
+        { num: 2, title: "Acknowledgement", summary: "Gratitude to faculty, institution, and environmental engineering mentors." },
+        { num: 3, title: "Abstract", summary: "Executive summary of on-spot assessment and artificial recharge modeling." },
+        { num: 4, title: "Introduction & Water Scarcity", summary: "Contextual background on urban groundwater depletion and institutional role." },
+        { num: 5, title: "Need of Study", summary: "Water deficits, borewell pumping overhead, and regulatory mandates." },
+        { num: 6, title: "Objectives of the Study", summary: "Five core goals guiding physical survey, hydro calculations, and software tools." },
+        { num: 7, title: "Literature Review & Standards", summary: "BIS IS 15797:2008 and CGWB statutory recharge parameters." },
+        { num: 8, title: "Study Area & Campus Profile", summary: "Profile of Maharana Pratap Group Campus (2,500 m² catchment)." },
+        { num: 9, title: "Methodology & Workflow", summary: "6-phase engineering lifecycle from field audit to computational analysis." },
+        { num: 10, title: "On-Spot Field Survey Protocols", summary: "Diagnostic checklist for roof surfaces, slopes, downpipes, and contamination." },
+        { num: 11, title: "System Architecture & Filtration", summary: "Conveyance, floating-ball first flush, and dual-media filter strata." },
+        { num: 12, title: "Artificial Recharge Techniques", summary: "Recharge pits, trenches, and slotted PVC casing injection borewells." },
+        { num: 13, title: "Mathematical Formulations", summary: "Rational Runoff Formula (Q = A × R × C × η) and hydraulic equations." },
+        { num: 14, title: "Results & Discussion", summary: "1.91 Million Liters annual yield and 65% non-potable demand offset." },
+        { num: 15, title: "Advantages & Ecological Impact", summary: "Groundwater replenishment, flood attenuation, and utility savings." },
+        { num: 16, title: "Limitations & Risk Management", summary: "Rainfall seasonality, maintenance protocols, and siltation prevention." },
+        { num: 17, title: "Action Plan & Recommendations", summary: "Institutional roadmap for implementation and student green squads." },
+        { num: 18, title: "Future Scope: IoT & AI Integration", summary: "Smart sensor telemetry, motorized valve orchestration, and digital twins." },
+        { num: 19, title: "Conclusion", summary: "Synthesis confirming high feasibility and rapid 2.8-year payback." },
+        { num: 20, title: "References & Statutory Codes", summary: "Citations from BIS, CGWB, and hydro-engineering literature." }
+      ];
+
+      const filtered = chapters.filter(c => c.title.toLowerCase().includes(search.toLowerCase()) || c.summary.toLowerCase().includes(search.toLowerCase()));
+
+      return (
+        <div className="fade-in">
+          <div className="metric-card">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+              <div>
+                <h3 style={{ fontSize: '1.2rem', fontWeight: '800', color: 'var(--accent-primary)' }}>
+                  📖 20-Chapter Project Synopsis & Academic Documentation
+                </h3>
+                <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
+                  Maharana Pratap Group of Professional Studies • BCA Session 2026
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                <input 
+                  type="text" 
+                  placeholder="Search chapters..." 
+                  className="form-input" 
+                  style={{ width: '220px', padding: '0.45rem 0.75rem' }} 
+                  value={search} 
+                  onChange={e => setSearch(e.target.value)} 
+                />
+                <button className="action-btn primary" onClick={() => window.print()}>
+                  <Printer size={16} />
+                  <span>Print PDF Report</span>
+                </button>
+              </div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '1rem', marginTop: '1.25rem' }}>
+              {filtered.map(ch => (
+                <div key={ch.num} style={{ background: 'var(--bg-surface)', border: '1.5px solid var(--border-glass)', borderRadius: '12px', padding: '1rem', display: 'flex', flexDirection: 'column', gap: '0.35rem' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <span style={{ background: 'var(--accent-primary)', color: '#fff', fontSize: '0.75rem', fontWeight: '800', padding: '0.2rem 0.55rem', borderRadius: '6px' }}>
+                      Ch. {ch.num}
+                    </span>
+                    <span style={{ fontWeight: '800', fontSize: '0.95rem' }}>{ch.title}</span>
+                  </div>
+                  <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', lineHeight: '1.4' }}>{ch.summary}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // ==========================================
+    // FARMER TAB 1: QUICK CALCULATOR
+    // ==========================================
+    const FarmerCalculatorView = () => {
+      const { selectedFarmPreset, setSelectedFarmPreset, roofSqFt, setRoofSqFt, farmerRainfall, setFarmerRainfall, familySize, setFamilySize, farmerResults } = useApp();
+
+      return (
+        <div className="fade-in">
+          {/* Farm Preset Buttons */}
+          <div style={{ marginBottom: '1rem' }}>
+            <div style={{ fontSize: '0.85rem', fontWeight: '700', marginBottom: '0.5rem', color: 'var(--text-muted)' }}>
+              STEP 1: SELECT YOUR SHED / BUILDING SIZE
+            </div>
+            <div className="preset-buttons-grid">
+              {FARM_PRESETS.map(p => (
+                <button 
+                  key={p.id} 
+                  className={`farm-preset-btn ${selectedFarmPreset === p.id ? 'selected' : ''}`}
+                  onClick={() => { setSelectedFarmPreset(p.id); setRoofSqFt(p.areaSqFt); }}
+                >
+                  <span>{p.name}</span>
+                  <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)' }}>{p.areaSqFt.toLocaleString()} sq ft</span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="kpi-row">
+            <div className="kpi-card">
+              <span className="kpi-label">Annual Rain Harvest</span>
+              <span className="kpi-value">{farmerResults.annualYieldLiters.toLocaleString()} L</span>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>Free water per year</span>
+            </div>
+
+            <div className="kpi-card">
+              <span className="kpi-label">Recommended Tank Size</span>
+              <span className="kpi-value" style={{ color: 'var(--accent-emerald)' }}>{farmerResults.recommendedTankLiters.toLocaleString()} L</span>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>Storage Tank</span>
+            </div>
+
+            <div className="kpi-card">
+              <span className="kpi-label">Annual Money Saved</span>
+              <span className="kpi-value" style={{ color: 'var(--accent-amber)' }}>₹{farmerResults.moneySaved.toLocaleString()}</span>
+              <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '600' }}>~{farmerResults.autonomyDays} Days backup supply</span>
+            </div>
+          </div>
+
+          <div className="calc-grid">
+            <div className="metric-card">
+              <div style={{ fontSize: '1.05rem', fontWeight: '700', color: 'var(--accent-primary)' }}>
+                STEP 2: ADJUST MEASUREMENTS
+              </div>
+
+              <div className="form-group">
+                <div className="form-label">
+                  <span>Roof Catchment Area</span>
+                  <span style={{ color: 'var(--accent-primary)', fontWeight: '800' }}>{roofSqFt.toLocaleString()} sq ft ({farmerResults.roofM2} m²)</span>
+                </div>
+                <input type="range" min="300" max="15000" step="100" className="range-slider" value={roofSqFt} onChange={e => setRoofSqFt(+e.target.value)} />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Rainfall Zone</label>
+                <select className="form-select" value={farmerRainfall} onChange={e => setFarmerRainfall(+e.target.value)}>
+                  <option value="450">Dry / Low Rain (450 mm/yr)</option>
+                  <option value="900">Moderate Rain (900 mm/yr)</option>
+                  <option value="1800">Heavy Monsoon / Coastal (1800 mm/yr)</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <div className="form-label">
+                  <span>Family / Farm Members</span>
+                  <span style={{ color: 'var(--accent-primary)', fontWeight: '800' }}>{familySize} Persons</span>
+                </div>
+                <input type="range" min="1" max="25" step="1" className="range-slider" value={familySize} onChange={e => setFamilySize(+e.target.value)} />
+              </div>
+            </div>
+
+            <div className="metric-card">
+              <div style={{ fontSize: '1.05rem', fontWeight: '700', color: 'var(--accent-emerald)' }}>
+                WATER TANK LEVEL PREVIEW
+              </div>
+
+              <div className="tank-meter-box">
+                <div className="tank-water-fill" style={{ height: '75%' }}></div>
+                <div className="tank-label-text">
+                  {farmerResults.recommendedTankLiters.toLocaleString()} L
+                  <div style={{ fontSize: '0.85rem', fontWeight: '600' }}>Recommended Capacity</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // ==========================================
+    // FARMER TAB 2: DEALER QUOTATION GENERATOR
+    // ==========================================
+    const DealerQuoteView = () => {
+      const { quoteConfig, setQuoteConfig, dealerQuote } = useApp();
+
+      return (
+        <div className="fade-in">
+          <div className="calc-grid">
+            <div className="metric-card">
+              <h3 style={{ fontSize: '1.15rem', fontWeight: '800', color: 'var(--accent-primary)' }}>
+                ⚙️ Configure Quotation Package
+              </h3>
+
+              <div className="form-group">
+                <label className="form-label">Water Tank Storage Capacity</label>
+                <select className="form-select" value={quoteConfig.tankCapacity} onChange={e => setQuoteConfig({ ...quoteConfig, tankCapacity: +e.target.value })}>
+                  <option value="1000">1,000 Liters (Small Shed)</option>
+                  <option value="2000">2,000 Liters (Medium House)</option>
+                  <option value="5000">5,000 Liters (Standard Farm)</option>
+                  <option value="10000">10,000 Liters (Commercial Barn)</option>
+                  <option value="20000">20,000 Liters (Campus / High Yield)</option>
+                </select>
+              </div>
+
+              <div className="form-group">
+                <div className="form-label">
+                  <span>Piping & Gutter Length</span>
+                  <span style={{ fontWeight: '800', color: 'var(--accent-primary)' }}>{quoteConfig.pipeLength} Meters</span>
+                </div>
+                <input type="range" min="10" max="150" step="5" className="range-slider" value={quoteConfig.pipeLength} onChange={e => setQuoteConfig({ ...quoteConfig, pipeLength: +e.target.value })} />
+              </div>
+
+              <div className="form-group">
+                <label className="form-label">Filtration Unit Level</label>
+                <select className="form-select" value={quoteConfig.filterType} onChange={e => setQuoteConfig({ ...quoteConfig, filterType: e.target.value })}>
+                  <option value="basic">Basic Mesh Strainer (Leaves/Debris)</option>
+                  <option value="diverter_sediment">First-Flush + Dual Sand Filter (Standard)</option>
+                  <option value="uv_purifier">Full Ultra-Filtration + UV Disinfection</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="quote-box">
+              <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '2px solid var(--border-glass)', paddingBottom: '0.75rem', marginBottom: '1rem' }}>
+                <div>
+                  <h3 style={{ fontSize: '1.2rem', fontWeight: '800' }}>Official Price Quotation</h3>
+                  <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)' }}>AquaHarvest Dealer Network</span>
+                </div>
+                <button className="action-btn primary" onClick={() => window.print()}>
+                  <Printer size={16} />
+                  <span>Print Invoice</span>
+                </button>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.65rem', fontSize: '0.95rem' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>HDPE Storage Tank ({quoteConfig.tankCapacity.toLocaleString()} L):</span>
+                  <strong>₹{dealerQuote.tankCost.toLocaleString()}</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Conveyance Piping & Gutters ({quoteConfig.pipeLength} m):</span>
+                  <strong>₹{dealerQuote.pipeCost.toLocaleString()}</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Filtration System Package:</span>
+                  <strong>₹{dealerQuote.filterCost.toLocaleString()}</strong>
+                </div>
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span>Installation, Civil Work & Labor:</span>
+                  <strong>₹{dealerQuote.laborCost.toLocaleString()}</strong>
+                </div>
+
+                <div style={{ borderTop: '2px solid var(--accent-primary)', paddingTop: '0.75rem', marginTop: '0.5rem', display: 'flex', justifyContent: 'space-between', fontSize: '1.25rem', fontWeight: '800', color: 'var(--accent-primary)' }}>
+                  <span>ESTIMATED TOTAL:</span>
+                  <span>₹{dealerQuote.total.toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // ==========================================
+    // FARMER TAB 3: KISAN AI ASSISTANT
+    // ==========================================
+    const KisanAIChatView = () => {
+      const { messages, handleSendMessage, isGenerating } = useApp();
+      const [input, setInput] = useState('');
+      const chatEndRef = useRef(null);
+
+      useEffect(() => {
+        chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      }, [messages, isGenerating]);
+
+      const onSend = () => {
+        if (!input.trim() || isGenerating) return;
+        handleSendMessage(input);
+        setInput('');
+      };
+
+      const handleKeyDown = (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          onSend();
+        }
+      };
+
+      return (
+        <div className="chat-container fade-in">
+          <div className="chat-messages">
+            {messages.map(m => (
+              <div key={m.id} className={`message-row ${m.sender}`}>
+                <div className="avatar-box">
+                  {m.sender === 'user' ? '👤' : '🤖'}
+                </div>
+                <div className="message-bubble" style={{ whiteSpace: 'pre-line' }}>
+                  {m.text}
+                </div>
+              </div>
+            ))}
+
+            {isGenerating && (
+              <div className="message-row assistant">
+                <div className="avatar-box">🤖</div>
+                <div className="message-bubble" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <Loader2 size={16} className="spinSlow" />
+                  <span>Kisan AI is calculating hydro response...</span>
+                </div>
+              </div>
+            )}
+            <div ref={chatEndRef} />
+          </div>
+
+          <div style={{ display: 'flex', gap: '0.4rem', flexWrap: 'wrap' }}>
+            {KISAN_PROMPTS.map((p, idx) => (
+              <button key={idx} className="preset-chip" onClick={() => handleSendMessage(p.replace(/^[^a-zA-Z0-9]+/, ''))}>
+                <Sparkles size={14} color="var(--accent-primary)" />
+                <span>{p}</span>
+              </button>
+            ))}
+          </div>
+
+          <div className="chat-input-box">
+            <textarea 
+              className="chat-textarea" 
+              placeholder="Ask Kisan AI any water, farm, or borewell question... (Press Enter to send)" 
+              value={input} 
+              onChange={e => setInput(e.target.value)} 
+              onKeyDown={handleKeyDown} 
+            />
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <span style={{ fontSize: '0.78rem', color: 'var(--text-muted)', fontWeight: '600' }}>AI Ground & Rainwater Helper</span>
+              <button className="action-btn primary" onClick={onSend} disabled={!input.trim() || isGenerating}>
+                <Send size={16} />
+                <span>Send</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      );
+    };
+
+    // ==========================================
+    // MAIN ROOT APPLICATION COMPONENT
+    // ==========================================
+    const MainApp = () => {
+      const { appMode, activeTab } = useApp();
+
+      return (
+        <div className="app-container">
+          <Sidebar />
+          <main className="main-workspace">
+            <Header />
+            <div className="tab-content">
+              {/* Academic Suite Tabs */}
+              {appMode === 'academic' && (
+                <>
+                  {activeTab === 'dashboard' && <AcademicDashboard />}
+                  {activeTab === 'survey' && <FieldSurveyAudit />}
+                  {activeTab === 'calc' && <HydroCalculationEngine />}
+                  {activeTab === 'schematic' && <SystemSchematicView />}
+                  {activeTab === 'cost' && <CostRoiView />}
+                  {activeTab === 'iot' && <SmartIotView />}
+                  {activeTab === 'report' && <SynopsisDocsView />}
+                </>
+              )}
+
+              {/* Farmer & Dealer Suite Tabs */}
+              {appMode === 'farmer' && (
+                <>
+                  {activeTab === 'farmer_calc' && <FarmerCalculatorView />}
+                  {activeTab === 'dealer_quote' && <DealerQuoteView />}
+                  {activeTab === 'kisan_ai' && <KisanAIChatView />}
+                </>
+              )}
+            </div>
+          </main>
+
+          {/* Account & Profile Modals */}
+          <AuthModal />
+          <ProfileModal />
+          <ProjectsModal />
+        </div>
+      );
+    };
+
+    const Root = () => (
+      <AppProvider>
+        <MainApp />
+      </AppProvider>
+    );
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<Root />);
+  </script>
+</body>
+</html>
